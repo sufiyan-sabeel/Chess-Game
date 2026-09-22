@@ -3,8 +3,8 @@ class GameUI {
         this.logic = new GameLogic();
         this.boardElement = document.getElementById('chessboard');
         this.statusElement = document.getElementById('status-area');
-        this.gameMode = 'hotseat'; // 'hotseat' or 'ai'
-        this.selectedPiece = null; // { row, col, element }
+        this.gameMode = 'hotseat';
+        this.selectedPiece = null;
         this.highlightedSquares = [];
         this.moveHistoryString = '';
 
@@ -40,11 +40,10 @@ class GameUI {
         const squares = this.boardElement.children;
         for (let i = 0; i < squares.length; i++) {
             const square = squares[i];
-            square.innerHTML = ''; // Clear previous piece
+            square.innerHTML = '';
             const row = parseInt(square.dataset.row);
             const col = parseInt(square.dataset.col);
             const piece = this.logic.getPieceAt(row, col);
-
             if (piece) {
                 const icon = document.createElement('i');
                 icon.classList.add('fa-solid', this.pieceMap[piece], 'text-4xl', 'md:text-5xl', 'cursor-pointer');
@@ -59,8 +58,9 @@ class GameUI {
         this.boardElement.addEventListener('click', (e) => this.handleSquareClick(e));
         document.getElementById('new-game-btn').addEventListener('click', () => this.startNewGame());
         document.getElementById('resign-btn').addEventListener('click', () => this.resignGame());
+        document.getElementById('play-again-btn').addEventListener('click', () => this.startNewGame());
     }
-    
+
     startNewGame() {
         this.logic.resetGame();
         this.selectedPiece = null;
@@ -69,108 +69,86 @@ class GameUI {
         this.updateStatus();
         this.moveHistoryString = '';
         document.getElementById('game-controls').classList.remove('hidden');
-        const gameOverSection = document.getElementById('game-over-section');
-        if (gameOverSection) gameOverSection.classList.add('hidden');
-        const saveGameSection = document.getElementById('save-game-section');
-        if (saveGameSection) saveGameSection.classList.add('hidden');
+        document.getElementById('game-over-section').classList.add('hidden');
     }
-    
+
     resignGame() {
         if (this.logic.isGameOver) return;
         this.logic.isGameOver = true;
         const winner = this.logic.getOpponentColor(this.logic.currentPlayer);
         this.statusElement.textContent = `You resigned. ${winner.charAt(0).toUpperCase() + winner.slice(1)} wins.`;
-        
-        const result = this.logic.currentPlayer === 'white' ? 'loss' : 'win'; // Assuming player is always white vs AI for simplicity
+        const result = this.logic.currentPlayer === 'white' ? 'loss' : 'win';
         this.endGame(result);
     }
-    
-    endGame(result) { // result: 'win', 'loss', 'draw'
+
+    endGame(result) {
         document.getElementById('game-controls').classList.add('hidden');
         const gameOverSection = document.getElementById('game-over-section');
-        if (gameOverSection) {
-            gameOverSection.classList.remove('hidden');
-            const resultText = document.getElementById('game-result-text');
-            if (resultText) {
-                if (result === 'win') {
-                    resultText.textContent = 'Congratulations! You won!';
-                    resultText.className = 'mb-4 text-green-400 font-bold';
-                } else if (result === 'loss') {
-                    resultText.textContent = 'Game Over. You lost.';
-                    resultText.className = 'mb-4 text-red-400 font-bold';
-                } else {
-                    resultText.textContent = 'Game Over. It\'s a draw.';
-                    resultText.className = 'mb-4 text-yellow-400 font-bold';
-                }
-            }
-            const playAgainBtn = document.getElementById('play-again-btn');
-            if (playAgainBtn) {
-                playAgainBtn.onclick = () => this.startNewGame();
-            }
+        gameOverSection.classList.remove('hidden');
+        const resultText = document.getElementById('game-result-text');
+        if (result === 'win') {
+            resultText.textContent = 'Congratulations! You won!';
+            resultText.className = 'mb-4 text-green-400 font-bold';
+        } else if (result === 'loss') {
+            resultText.textContent = 'Game Over. You lost.';
+            resultText.className = 'mb-4 text-red-400 font-bold';
+        } else {
+            resultText.textContent = "Game Over. It's a draw.";
+            resultText.className = 'mb-4 text-yellow-400 font-bold';
+        }
+
+        // Save game to localStorage
+        if (typeof Auth !== 'undefined' && Auth.isLoggedIn()) {
+            const opponentType = this.gameMode === 'ai' ? 'ai' : 'human';
+            DB.addGame(Auth.currentUser.id, opponentType, result, this.moveHistoryString.trim());
         }
     }
 
-
     handleSquareClick(event) {
         if (this.logic.isGameOver) return;
-
         const square = event.target.closest('[data-row]');
         if (!square) return;
-
         const row = parseInt(square.dataset.row);
         const col = parseInt(square.dataset.col);
         const piece = this.logic.getPieceAt(row, col);
 
         if (this.selectedPiece) {
-            // This is the second click (making a move)
             const fromRow = this.selectedPiece.row;
             const fromCol = this.selectedPiece.col;
             const selectedPieceType = this.logic.getPieceAt(fromRow, fromCol);
-            
             if (this.logic.isPawnPromotion(selectedPieceType, row)) {
                 this.promptForPromotion(fromRow, fromCol, row, col);
             } else {
                 this.tryMove(fromRow, fromCol, row, col);
             }
-
             this.clearHighlights();
             this.selectedPiece = null;
         } else if (piece && this.logic.getPieceColor(piece) === this.logic.currentPlayer) {
-            // This is the first click (selecting a piece)
             this.selectedPiece = { row, col, element: square };
             this.highlightValidMoves(row, col);
         }
     }
-    
+
     tryMove(fromRow, fromCol, toRow, toCol, promotionPiece = null) {
         const moveSuccessful = this.logic.makeMove(fromRow, fromCol, toRow, toCol, promotionPiece);
-
         if (moveSuccessful) {
             this.addToMoveHistory(fromRow, fromCol, toRow, toCol, promotionPiece);
             this.renderBoard();
             this.updateStatus();
-
-            if (this.logic.isGameOver) {
-                this.handleGameOver();
-                return;
-            }
-
-            // If it's AI's turn
+            if (this.logic.isGameOver) { this.handleGameOver(); return; }
             if (this.gameMode === 'ai' && this.logic.currentPlayer === 'black') {
-                this.boardElement.style.pointerEvents = 'none'; // Disable player input
+                this.boardElement.style.pointerEvents = 'none';
                 setTimeout(() => {
                     const aiMove = window.gameAI.findBestMove(this.logic);
-                    if(aiMove) {
+                    if (aiMove) {
                         this.logic.makeMove(aiMove.from.row, aiMove.from.col, aiMove.to.row, aiMove.to.col);
                         this.addToMoveHistory(aiMove.from.row, aiMove.from.col, aiMove.to.row, aiMove.to.col, null);
                         this.renderBoard();
                         this.updateStatus();
-                         if (this.logic.isGameOver) {
-                            this.handleGameOver();
-                        }
+                        if (this.logic.isGameOver) this.handleGameOver();
                     }
-                    this.boardElement.style.pointerEvents = 'auto'; // Re-enable player input
-                }, 500); // Small delay for effect
+                    this.boardElement.style.pointerEvents = 'auto';
+                }, 500);
             }
         }
     }
@@ -178,52 +156,38 @@ class GameUI {
     handleGameOver() {
         const status = this.logic.gameStatus;
         let result;
-        if (status.includes('White wins')) {
-            result = 'win';
-        } else if (status.includes('Black wins')) {
-            result = 'loss';
-        } else {
-            result = 'draw';
-        }
+        if (status.includes('White wins')) result = 'win';
+        else if (status.includes('Black wins')) result = 'loss';
+        else result = 'draw';
         this.endGame(result);
     }
-    
+
     addToMoveHistory(fromRow, fromCol, toRow, toCol, promotion) {
         const colMap = 'abcdefgh';
         let move = `${colMap[fromCol]}${8 - fromRow}${colMap[toCol]}${8 - toRow}`;
-        if (promotion) {
-            move += promotion;
-        }
+        if (promotion) move += promotion;
         this.moveHistoryString += move + ' ';
     }
-    
-    updateStatus() {
-        this.statusElement.textContent = this.logic.gameStatus;
-    }
+
+    updateStatus() { this.statusElement.textContent = this.logic.gameStatus; }
 
     highlightValidMoves(row, col) {
         this.clearHighlights();
         const validMoves = this.logic.getValidMoves(row, col);
-
-        // Highlight selected piece's square
         const selectedSquare = this.boardElement.querySelector(`[data-row='${row}'][data-col='${col}']`);
-        selectedSquare.style.backgroundColor = '#b7791f'; // A gold/yellow color
+        selectedSquare.style.backgroundColor = '#b7791f';
         this.highlightedSquares.push(selectedSquare);
 
         validMoves.forEach(move => {
             const moveSquare = this.boardElement.querySelector(`[data-row='${move.row}'][data-col='${move.col}']`);
-            
             const highlight = document.createElement('div');
             highlight.classList.add('w-1/3', 'h-1/3', 'rounded-full', 'opacity-50');
-            
             if (this.logic.getPieceAt(move.row, move.col)) {
-                // It's a capture
                 moveSquare.style.outline = '4px solid rgba(229, 62, 62, 0.7)';
                 moveSquare.style.outlineOffset = '-4px';
             } else {
-                // It's a move to an empty square
                 highlight.style.backgroundColor = 'rgba(0,0,0,0.3)';
-                 moveSquare.appendChild(highlight);
+                moveSquare.appendChild(highlight);
             }
             this.highlightedSquares.push(moveSquare);
         });
@@ -233,28 +197,19 @@ class GameUI {
         this.highlightedSquares.forEach(square => {
             const row = parseInt(square.dataset.row);
             const col = parseInt(square.dataset.col);
-            square.style.backgroundColor = (row + col) % 2 === 0 ? '#CBD5E0' : '#718096'; // Reset to default colors
+            square.style.backgroundColor = (row + col) % 2 === 0 ? '#CBD5E0' : '#718096';
             square.style.outline = 'none';
-             const highlightCircle = square.querySelector('div');
-             if (highlightCircle) {
-                 square.removeChild(highlightCircle);
-             }
+            const highlightCircle = square.querySelector('div');
+            if (highlightCircle) square.removeChild(highlightCircle);
         });
         this.highlightedSquares = [];
     }
-    
+
     promptForPromotion(fromRow, fromCol, toRow, toCol) {
         const promotionContainer = document.createElement('div');
-        promotionContainer.style.cssText = `
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background-color: #2d3748; padding: 2rem; border-radius: 0.5rem; z-index: 100;
-            display: flex; gap: 1rem; border: 2px solid #4a5568;
-        `;
-        
+        promotionContainer.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background-color:#2d3748;padding:2rem;border-radius:0.5rem;z-index:100;display:flex;gap:1rem;border:2px solid #4a5568;';
         const color = this.logic.currentPlayer;
-        const pieces = ['Q', 'R', 'B', 'N'];
-        
-        pieces.forEach(p => {
+        ['Q', 'R', 'B', 'N'].forEach(p => {
             const pieceCode = color.charAt(0) + p;
             const btn = document.createElement('button');
             const icon = document.createElement('i');
@@ -267,7 +222,6 @@ class GameUI {
             };
             promotionContainer.appendChild(btn);
         });
-        
         document.body.appendChild(promotionContainer);
     }
 }

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Sign Up - CheckMate Web</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { background-color: #1a202c; }
+        .tab-active { border-bottom-color: #48bb78; color: #48bb78; }
+        .tab-inactive { border-bottom-color: transparent; color: #a0aec0; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md p-8 space-y-8 bg-gray-900 rounded-lg shadow-lg">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-white tracking-wider"><i class="fa-solid fa-chess"></i> CheckMate Web</h1>
+        </div>
+
+        <div class="flex border-b border-gray-700">
+            <button id="login-tab-btn" class="flex-1 py-2 text-center font-semibold border-b-2 transition-colors duration-300 tab-active" onclick="showTab('login')">Login</button>
+            <button id="signup-tab-btn" class="flex-1 py-2 text-center font-semibold border-b-2 transition-colors duration-300 tab-inactive" onclick="showTab('signup')">Sign Up</button>
+        </div>
+        
+        <div id="error-box" class="hidden bg-red-500/20 text-red-300 p-3 rounded-md border border-red-500/50"></div>
+
+        <form id="login-form" class="space-y-4" onsubmit="handleLogin(event)">
+            <div>
+                <label class="block mb-2 text-sm font-medium text-gray-400">Username</label>
+                <input type="text" id="login-username" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500" required>
+            </div>
+            <div>
+                <label class="block mb-2 text-sm font-medium text-gray-400">Password</label>
+                <input type="password" id="login-password" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500" required>
+            </div>
+            <button type="submit" class="w-full mt-6 px-4 py-2 font-bold text-gray-900 bg-green-500 rounded-md hover:bg-green-600 transition-colors">Login</button>
+        </form>
+
+        <form id="signup-form" class="hidden space-y-4" onsubmit="handleSignup(event)">
+            <div>
+                <label class="block mb-2 text-sm font-medium text-gray-400">Username</label>
+                <input type="text" id="signup-username" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500" required>
+            </div>
+            <div>
+                <label class="block mb-2 text-sm font-medium text-gray-400">Email</label>
+                <input type="email" id="signup-email" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500" required>
+            </div>
+            <div>
+                <label class="block mb-2 text-sm font-medium text-gray-400">Password</label>
+                <input type="password" id="signup-password" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500" required>
+            </div>
+            <button type="submit" class="w-full mt-6 px-4 py-2 font-bold text-gray-900 bg-green-500 rounded-md hover:bg-green-600 transition-colors">Create Account</button>
+        </form>
+
+        <div class="text-center mt-4">
+            <a href="index.html" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-arrow-left mr-1"></i>Back to Home</a>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        if (Auth.isLoggedIn()) window.location.href = 'index.html';
+
+        function showTab(tab) {
+            document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('signup-form').classList.toggle('hidden', tab !== 'signup');
+            document.getElementById('login-tab-btn').className = 'flex-1 py-2 text-center font-semibold border-b-2 transition-colors duration-300 ' + (tab === 'login' ? 'tab-active' : 'tab-inactive');
+            document.getElementById('signup-tab-btn').className = 'flex-1 py-2 text-center font-semibold border-b-2 transition-colors duration-300 ' + (tab === 'signup' ? 'tab-active' : 'tab-inactive');
+        }
+
+        function showError(msg) {
+            const box = document.getElementById('error-box');
+            box.textContent = msg;
+            box.classList.remove('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const r = Auth.login(document.getElementById('login-username').value, document.getElementById('login-password').value);
+            if (r.error) showError(r.error);
+            else window.location.href = 'index.html';
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            const r = Auth.signup(
+                document.getElementById('signup-username').value,
+                document.getElementById('signup-email').value,
+                document.getElementById('signup-password').value
+            );
+            if (r.error) showError(r.error);
+            else window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

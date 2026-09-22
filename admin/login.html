@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - CheckMate Web</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style> body { background-color: #1a202c; } </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-sm p-8 space-y-6 bg-gray-900 rounded-lg shadow-lg">
+        <h1 class="text-2xl font-bold text-center text-white">Admin Panel Login</h1>
+        <div id="error-box" class="hidden bg-red-500/20 text-red-300 p-3 rounded-md border border-red-500/50"></div>
+        <form onsubmit="handleLogin(event)">
+            <div class="space-y-4">
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-400">Username</label>
+                    <input type="text" id="admin-user" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-400">Password</label>
+                    <input type="password" id="admin-pass" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+            </div>
+            <button type="submit" class="w-full mt-6 px-4 py-2 font-bold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors">Login</button>
+        </form>
+    </div>
+    <script src="js/db.js"></script>
+    <script>
+        if (localStorage.getItem('chess_admin_session')) window.location.href = 'index.html';
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const admin = DB.getAdmin();
+            const u = document.getElementById('admin-user').value;
+            const p = document.getElementById('admin-pass').value;
+            if (admin && admin.username === u && admin.password === p) {
+                localStorage.setItem('chess_admin_session', 'true');
+                window.location.href = 'index.html';
+            } else {
+                const box = document.getElementById('error-box');
+                box.textContent = 'Invalid username or password.';
+                box.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
