@@ -1,0 +1,12 @@
+# PHP files (not needed for GitHub Pages)
+chess/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
