@@ -1,0 +1,295 @@
+You are an expert full-stack web developer.
+Your job is to recreate a fully functional, mobile-friendly chess web app named “PHP Checkmate Web.”
+
+This project must be 100% identical in structure, file naming, logic, and functionality to the specification below.
+Every file, folder, function, and feature must exist exactly as described — with full working PHP + JavaScript + CSS + MySQL code.
+
+
+---
+
+⚙️ Core Technologies
+
+Backend: PHP (no frameworks)
+
+Frontend: HTML5, CSS3, Vanilla JavaScript
+
+Database: MySQL
+
+Sound Effects: .mp3 audio files integrated into gameplay events
+
+Output: One ready-to-run web project folder (no external dependencies)
+
+
+
+---
+
+📁 Project Folder Structure
+
+/ (root)
+│
+├── index.php
+├── game.php
+├── install.php
+├── login.php
+├── profile.php
+│
+├── /admin
+│   ├── index.php
+│   ├── login.php
+│   ├── logout.php
+│   ├── signup.php
+│   ├── users.php
+│   ├── /common
+│   │   ├── header.php
+│   │   └── bottom.php
+│
+├── /common
+│   ├── header.php
+│   ├── bottom.php
+│   └── config.php
+│
+├── /js
+│   ├── game-ui.js
+│   ├── game-logic.js
+│   └── game-ai.js
+│
+└── /sounds
+    ├── move.mp3
+    ├── capture.mp3
+    ├── check.mp3
+    ├── game-start.mp3
+    └── ui-click.mp3
+
+All files above must be included with complete source code, not placeholders.
+
+
+---
+
+🧩 Functional Overview
+
+1. Homepage (index.php)
+
+Landing page showing game logo, “Play Now”, “Login”, and “Admin” buttons.
+
+Links to login.php for user access.
+
+Include responsive layout (mobile-first).
+
+
+2. User Authentication
+
+login.php: Handles user login and signup.
+
+profile.php: Displays username, win/loss stats, and game history.
+
+Sessions must be used for authentication.
+
+Uses MySQL table users (id, username, password, wins, losses).
+
+
+3. Game Page (game.php)
+
+Displays an 8×8 chessboard using HTML table or grid.
+
+Each square has alternating light/dark theme using CSS.
+
+Chess pieces loaded as images or Unicode icons.
+
+Supports:
+
+Drag-and-drop piece movement.
+
+Move validation (legal moves only).
+
+Check and checkmate detection.
+
+Option to play vs AI or another player.
+
+
+Move sounds:
+
+move.mp3 for regular moves.
+
+capture.mp3 for capturing pieces.
+
+check.mp3 for check.
+
+game-start.mp3 at match start.
+
+ui-click.mp3 for button interactions.
+
+
+
+4. JavaScript Files
+
+game-ui.js:
+Handles rendering, animations, highlights, and sound triggers.
+
+Highlight selected pieces and valid move squares.
+
+Animate piece movement.
+
+Update UI for “Check” and “Game Over.”
+
+
+game-logic.js:
+Contains chessboard logic:
+
+Move legality checks (pawn, rook, knight, bishop, queen, king).
+
+Turn control (white/black).
+
+Checkmate/stalemate detection.
+
+
+game-ai.js:
+Simple computer opponent using a basic move-evaluation algorithm:
+
+Selects legal moves at random or based on piece value.
+
+Responds after 1-second delay to simulate thinking.
+
+
+
+
+---
+
+👑 Admin Panel
+
+Folder: /admin
+
+login.php: Admin authentication.
+
+index.php: Dashboard showing:
+
+Total registered users
+
+Total matches played
+
+Last 10 matches (from matches table)
+
+
+users.php: Manage and delete user accounts.
+
+logout.php: End admin session.
+
+signup.php: Add new admin user.
+
+admin/common/header.php and bottom.php: Shared layout components.
+
+
+
+---
+
+🧱 Common Folder
+
+common/config.php:
+Contains MySQL connection and global constants.
+Example:
+
+$conn = mysqli_connect("127.0.0.1", "root", "", "chess_db");
+
+common/header.php:
+Included at the top of each page (meta tags, CSS links, navigation bar).
+
+common/bottom.php:
+Included at the bottom (footer + JS script imports).
+
+
+
+---
+
+⚙️ Database Design
+
+users (id, username, password, wins, losses, date_joined)
+
+matches (id, user1, user2, result, moves_json, timestamp)
+
+admins (id, username, password)
+
+
+All tables should be automatically created by install.php.
+
+
+---
+
+🧰 Install Script (install.php)
+
+Connects to MySQL.
+
+Creates all required tables.
+
+Displays success message and link to login.php.
+
+
+
+---
+
+💡 Frontend Design Requirements
+
+Dark modern theme with glowing highlights (black and gold or blue contrast).
+
+Center-aligned chessboard (responsive for mobile).
+
+Rounded corners for board and buttons.
+
+Use smooth hover effects on interactive elements.
+
+Include subtle shadows and gradient backgrounds.
+
+
+
+---
+
+🔊 Sound & Interaction Integration
+
+Each move, capture, or event triggers a sound from /sounds/.
+
+Sounds preloaded for fast playback.
+
+UI click sound on buttons or mode selection.
+
+
+
+---
+
+🧠 Game Logic Requirements
+
+Validate moves using proper chess rules.
+
+Detect check, checkmate, and stalemate.
+
+Maintain move history (in local variable or DB).
+
+Allow resign and restart options.
+
+
+
+---
+
+📲 Responsive UI
+
+Use media queries or CSS grid to make all pages mobile-friendly.
+
+Ensure chessboard resizes gracefully without layout breaking.
+
+
+
+---
+
+✅ Final Output Expectations
+
+The AI must:
+
+1. Generate all files with working code (PHP, JS, HTML, CSS, MP3 integration).
+
+
+2. Preserve exact folder names and file structure.
+
+
+3. Ensure database, login, and chess logic all work out of the box.
+
+
+4. Deliver one ready-to-run PHP project identical to this specification.
+
+"Sabhi files ek saath generate mat karo — pehle mujhe sirf poora folder structure batao. Main jis folder ka naam likhunga (jaise 'user' ya 'admin'), tum sirf us folder ke files ka code generate karna. Agla folder main likhne par hi uska code banana."

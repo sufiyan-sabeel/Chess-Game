@@ -69,7 +69,10 @@ class GameUI {
         this.updateStatus();
         this.moveHistoryString = '';
         document.getElementById('game-controls').classList.remove('hidden');
-        document.getElementById('save-game-section').classList.add('hidden');
+        const gameOverSection = document.getElementById('game-over-section');
+        if (gameOverSection) gameOverSection.classList.add('hidden');
+        const saveGameSection = document.getElementById('save-game-section');
+        if (saveGameSection) saveGameSection.classList.add('hidden');
     }
     
     resignGame() {
