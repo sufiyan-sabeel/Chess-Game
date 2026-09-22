@@ -8,6 +8,8 @@ class GameUI {
         this.highlightedSquares = [];
         this.moveHistoryString = '';
 
+        this.clock = null;
+
         this.pieceMap = {
             'wK': 'fa-chess-king', 'wQ': 'fa-chess-queen', 'wR': 'fa-chess-rook', 'wB': 'fa-chess-bishop', 'wN': 'fa-chess-knight', 'wP': 'fa-chess-pawn',
             'bK': 'fa-chess-king', 'bQ': 'fa-chess-queen', 'bR': 'fa-chess-rook', 'bB': 'fa-chess-bishop', 'bN': 'fa-chess-knight', 'bP': 'fa-chess-pawn',
@@ -20,6 +22,19 @@ class GameUI {
         this.renderBoard();
         this.attachEventListeners();
         this.updateStatus();
+        this._initClock();
+    }
+
+    _initClock() {
+        if (typeof ChessClock === 'undefined') return;
+        this.clock = new ChessClock();
+        this.clock.bindDOM('clock-white', 'clock-black', 'label-white', 'label-black');
+        this.clock.setOnTimeout((loser) => this.handleTimeout(loser));
+
+        const restored = this.clock.restoreState();
+        if (!restored) {
+            this.clock.reset();
+        }
     }
 
     createBoard() {
@@ -59,6 +74,24 @@ class GameUI {
         document.getElementById('new-game-btn').addEventListener('click', () => this.startNewGame());
         document.getElementById('resign-btn').addEventListener('click', () => this.resignGame());
         document.getElementById('play-again-btn').addEventListener('click', () => this.startNewGame());
+
+        const pauseBtn = document.getElementById('pause-btn');
+        const resumeBtn = document.getElementById('resume-btn');
+        const resetClockBtn = document.getElementById('reset-clock-btn');
+        const timeControlSelect = document.getElementById('time-control-select');
+
+        if (pauseBtn) pauseBtn.addEventListener('click', () => this.pauseGame());
+        if (resumeBtn) resumeBtn.addEventListener('click', () => this.resumeGame());
+        if (resetClockBtn) resetClockBtn.addEventListener('click', () => this.resetClock());
+        if (timeControlSelect) {
+            timeControlSelect.value = this.clock ? this.clock.getSelectedControl() : '5+3';
+            timeControlSelect.addEventListener('change', (e) => {
+                if (this.clock) {
+                    this.clock.setSelectedControl(e.target.value);
+                    if (!this.clock.gameStarted) this.clock.reset();
+                }
+            });
+        }
     }
 
     startNewGame() {
@@ -70,6 +103,14 @@ class GameUI {
         this.moveHistoryString = '';
         document.getElementById('game-controls').classList.remove('hidden');
         document.getElementById('game-over-section').classList.add('hidden');
+
+        if (this.clock) {
+            const tcSelect = document.getElementById('time-control-select');
+            if (tcSelect) this.clock.setSelectedControl(tcSelect.value);
+            this.clock.startGame();
+        }
+
+        this._updatePauseResumeUI(false);
     }
 
     resignGame() {
@@ -78,6 +119,8 @@ class GameUI {
         const winner = this.logic.getOpponentColor(this.logic.currentPlayer);
         this.statusElement.textContent = `You resigned. ${winner.charAt(0).toUpperCase() + winner.slice(1)} wins.`;
         const result = this.logic.currentPlayer === 'white' ? 'loss' : 'win';
+
+        if (this.clock) this.clock.forceStop();
         this.endGame(result);
     }
 
@@ -97,7 +140,8 @@ class GameUI {
             resultText.className = 'mb-4 text-yellow-400 font-bold';
         }
 
-        // Save game to localStorage
+        if (this.clock) this.clock.stop();
+
         if (typeof Auth !== 'undefined' && Auth.isLoggedIn()) {
             const opponentType = this.gameMode === 'ai' ? 'ai' : 'human';
             DB.addGame(Auth.currentUser.id, opponentType, result, this.moveHistoryString.trim());
@@ -130,21 +174,34 @@ class GameUI {
     }
 
     tryMove(fromRow, fromCol, toRow, toCol, promotionPiece = null) {
+        const moveColor = this.logic.currentPlayer;
         const moveSuccessful = this.logic.makeMove(fromRow, fromCol, toRow, toCol, promotionPiece);
         if (moveSuccessful) {
             this.addToMoveHistory(fromRow, fromCol, toRow, toCol, promotionPiece);
             this.renderBoard();
             this.updateStatus();
+
+            if (this.clock) {
+                this.clock.onMoveCompleted(moveColor);
+            }
+
             if (this.logic.isGameOver) { this.handleGameOver(); return; }
+
             if (this.gameMode === 'ai' && this.logic.currentPlayer === 'black') {
                 this.boardElement.style.pointerEvents = 'none';
                 setTimeout(() => {
                     const aiMove = window.gameAI.findBestMove(this.logic);
                     if (aiMove) {
+                        const aiColor = this.logic.currentPlayer;
                         this.logic.makeMove(aiMove.from.row, aiMove.from.col, aiMove.to.row, aiMove.to.col);
                         this.addToMoveHistory(aiMove.from.row, aiMove.from.col, aiMove.to.row, aiMove.to.col, null);
                         this.renderBoard();
                         this.updateStatus();
+
+                        if (this.clock) {
+                            this.clock.onMoveCompleted(aiColor);
+                        }
+
                         if (this.logic.isGameOver) this.handleGameOver();
                     }
                     this.boardElement.style.pointerEvents = 'auto';
@@ -160,6 +217,46 @@ class GameUI {
         else if (status.includes('Black wins')) result = 'loss';
         else result = 'draw';
         this.endGame(result);
+    }
+
+    handleTimeout(loserColor) {
+        this.logic.isGameOver = true;
+        const winner = this.logic.getOpponentColor(loserColor);
+        this.statusElement.textContent = `${loserColor.charAt(0).toUpperCase() + loserColor.slice(1)} ran out of time. ${winner.charAt(0).toUpperCase() + winner.slice(1)} wins by timeout!`;
+
+        if (loserColor === 'white') {
+            this.endGame('loss');
+        } else {
+            this.endGame('win');
+        }
+    }
+
+    pauseGame() {
+        if (this.clock) {
+            this.clock.pause();
+            this._updatePauseResumeUI(true);
+        }
+    }
+
+    resumeGame() {
+        if (this.clock) {
+            this.clock.resume();
+            this._updatePauseResumeUI(false);
+        }
+    }
+
+    resetClock() {
+        if (this.clock) {
+            this.clock.reset();
+            this._updatePauseResumeUI(false);
+        }
+    }
+
+    _updatePauseResumeUI(isPaused) {
+        const pauseBtn = document.getElementById('pause-btn');
+        const resumeBtn = document.getElementById('resume-btn');
+        if (pauseBtn) pauseBtn.classList.toggle('hidden', isPaused);
+        if (resumeBtn) resumeBtn.classList.toggle('hidden', !isPaused);
     }
 
     addToMoveHistory(fromRow, fromCol, toRow, toCol, promotion) {
