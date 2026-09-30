@@ -18,20 +18,14 @@ global.sessionStorage = global.localStorage;
 global.performance = { now: () => Date.now() };
 global.navigator = {};
 
-// ---- Load source files ----
+// ---- Load source files using vm.runInThisContext (robust across Node versions) ----
+const vm = require('vm');
 const JS_DIR = path.join(__dirname, '..', 'js');
 const files = ['game-logic.js', 'game-ai.js', 'notation.js', 'db.js', 'puzzles-data.js'];
 for (const f of files) {
     const src = fs.readFileSync(path.join(JS_DIR, f), 'utf8');
-    (0, eval)(src + '\n;globalThis.GameLogic = globalThis.GameLogic || GameLogic;');
+    vm.runInThisContext(src, { filename: f });
 }
-
-// Re-eval to ensure globals are set
-(0, eval)(fs.readFileSync(path.join(JS_DIR, 'game-logic.js'), 'utf8') + ';globalThis.GameLogic = GameLogic;');
-(0, eval)(fs.readFileSync(path.join(JS_DIR, 'game-ai.js'), 'utf8') + ';globalThis.gameAI = gameAI;');
-(0, eval)(fs.readFileSync(path.join(JS_DIR, 'notation.js'), 'utf8') + ';globalThis.ChessNotation = ChessNotation;');
-(0, eval)(fs.readFileSync(path.join(JS_DIR, 'db.js'), 'utf8') + ';globalThis.DB = DB;');
-(0, eval)(fs.readFileSync(path.join(JS_DIR, 'puzzles-data.js'), 'utf8') + ';globalThis.PUZZLES = PUZZLES;');
 
 // ---- FEN parser ----
 function parseFEN(fen) {
