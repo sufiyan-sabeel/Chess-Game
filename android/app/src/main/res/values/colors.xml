@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#111214</color>
+    <color name="background_elevated">#1C1D20</color>
+    <color name="surface">#292A2E</color>
+    <color name="green">#81B64C</color>
+    <color name="green_board">#769656</color>
+    <color name="green_board_light">#EEEED2</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#A0A3A8</color>
+    <color name="gold">#E8C468</color>
+</resources>

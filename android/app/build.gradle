@@ -1,0 +1,70 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.checkmate.chess'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.checkmate.chess"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            // Sign with debug keystore by default so the release APK is installable.
+            // To use a real keystore, create keystore.properties (see keystore.properties.example)
+            // or provide RELEASE_KEYSTORE / RELEASE_KEYSTORE_PASSWORD / RELEASE_KEY_ALIAS / RELEASE_KEY_PASSWORD.
+            signingConfig signingConfigs.getByName("debug")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+// Copy web assets from the repository root into the build.
+// This keeps a single source of truth: the web app at the repo root.
+tasks.register('copyWebAssets', Copy) {
+    from("$rootDir/..") {
+        include 'index.html', 'favicon.svg'
+        include 'css/**'
+        include 'js/**'
+        include 'sounds/**'
+        include 'vendor/**'
+        include 'admin/**'
+        exclude 'android/**'
+        exclude '.git/**'
+        exclude '.github/**'
+        exclude '.gitignore'
+        exclude 'README.md'
+        exclude 'tools/**'
+    }
+    into layout.buildDirectory.dir("generated/web-assets")
+}
+
+android.sourceSets.main.assets.srcDirs += layout.buildDirectory.dir("generated/web-assets")
+
+tasks.named('preBuild').configure { dependsOn('copyWebAssets') }
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}

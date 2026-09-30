@@ -159,7 +159,10 @@ class GameLogic {
     getBishopMoves(row, col) { return this.getSlidingMoves(row, col, [[-1, -1], [-1, 1], [1, -1], [1, 1]]); }
     getQueenMoves(row, col) { return [...this.getRookMoves(row, col), ...this.getBishopMoves(row, col)]; }
 
-    getKingMoves(row, col) {
+    // Normal king moves (8 directions) — no castling. Used by getRawMovesForPiece
+    // to avoid infinite recursion (castling checks call isSquareAttacked, which
+    // calls getRawMovesForPiece for the enemy king).
+    _getKingMovesNormal(row, col) {
         const moves = [];
         const color = this.getPieceColor(this.getPieceAt(row, col));
         for (let dr = -1; dr <= 1; dr++) {
@@ -172,6 +175,12 @@ class GameLogic {
                 }
             }
         }
+        return moves;
+    }
+
+    getKingMoves(row, col) {
+        const moves = this._getKingMovesNormal(row, col);
+        const color = this.getPieceColor(this.getPieceAt(row, col));
         if (!this.hasKingMoved(color)) {
             if (!this.hasRookMoved(row, 7) && !this.getPieceAt(row, 5) && !this.getPieceAt(row, 6)) {
                 if (!this.isSquareAttacked(row, col, this.getOpponentColor(color)) &&
@@ -241,7 +250,7 @@ class GameLogic {
             case 'N': return this.getKnightMoves(row, col);
             case 'B': return this.getSlidingMoves(row, col, [[-1, -1], [-1, 1], [1, -1], [1, 1]]);
             case 'Q': return this.getQueenMoves(row, col);
-            case 'K': return this.getKingMoves(row, col);
+            case 'K': return this._getKingMovesNormal(row, col);
             default: return [];
         }
     }

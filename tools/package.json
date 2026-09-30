@@ -1,0 +1,9 @@
+{
+  "name": "checkmate-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CheckMate chess engine test suite",
+  "scripts": {
+    "test": "node run-tests.js"
+  }
+}

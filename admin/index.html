@@ -37,7 +37,7 @@
         <h1 class="text-3xl font-bold mb-6">Dashboard</h1>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="stats-grid"></div>
     </main>
-    <script src="js/db.js"></script>
+    <script src="../js/db.js"></script>
     <script>
         if (!localStorage.getItem('chess_admin_session')) { window.location.href = 'login.html'; throw 'Not admin'; }
         const stats = DB.getTotalStats();

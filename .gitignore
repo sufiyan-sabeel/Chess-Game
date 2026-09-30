@@ -5,3 +5,9 @@ Thumbs.db
 *.swp
 *.swo
 node_modules/
+tools/node_modules/
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+*.iml
