@@ -42,6 +42,8 @@ android {
 
 // Copy web assets from the repository root into the build.
 // This keeps a single source of truth: the web app at the repo root.
+// Files are placed under www/ so the WebView can load them from
+// file:///android_asset/www/index.html
 tasks.register('copyWebAssets', Copy) {
     from("$rootDir/..") {
         include 'index.html', 'favicon.svg'
@@ -57,7 +59,7 @@ tasks.register('copyWebAssets', Copy) {
         exclude 'README.md'
         exclude 'tools/**'
     }
-    into layout.buildDirectory.dir("generated/web-assets")
+    into layout.buildDirectory.dir("generated/web-assets/www")
 }
 
 android.sourceSets.main.assets.srcDirs += layout.buildDirectory.dir("generated/web-assets")
