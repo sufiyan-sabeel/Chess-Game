@@ -58,10 +58,6 @@
     function navigate(route) {
         if (!ROUTES.includes(route)) route = 'home';
         if (route !== 'login' && !Auth.isLoggedIn()) route = 'login';
-        if (route === 'game' && !App.game && !App._resumeAttempted) {
-            // No active game — go to play instead
-            route = 'play';
-        }
         App.currentRoute = route;
         if (location.hash !== '#/' + route) location.hash = '#/' + route;
         renderRoute(route);
